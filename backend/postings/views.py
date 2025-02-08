@@ -39,19 +39,20 @@ class PostingViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['GET'], url_path="get-ads")
     def get_ads(self, request):
-        search_term = request.query_params.get('queryset', None)  # Get query string parameter
-        print("+========" + search_term)
+        search_term = request.query_params.get('queryset', None)
+        
         if not search_term:
             return Response({"detail": "queryset parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        search_keywords = search_term.split(",")  # Convert query string to a list
+        search_keywords = search_term.split(",")  
+        print(f"Search Keywords extracted from queryset: {search_keywords}")
         def best_posting():
 
             best_dist = -1
             best_post = None
 
             for postings in self.queryset:
-                temp = calculate_similarity(postings.keywords, search_term)
+                temp = calculate_similarity(postings.keywords, search_keywords)
                 if temp > best_dist:
                     best_dist = temp
                     best_post = postings
@@ -62,6 +63,7 @@ class PostingViewSet(viewsets.ModelViewSet):
             return best_post
         
         sel_post = best_posting()
+        print(f"\nBest Post: {sel_post}\nPosting Keywords: {sel_post.keywords}")
 
         if sel_post is None:
             return Response({"detail": "No matching posting found."}, status=status.HTTP_404_NOT_FOUND)
@@ -77,6 +79,7 @@ class PostingViewSet(viewsets.ModelViewSet):
 
             for submission in filtered_submissions:
                 temp = calculate_similarity(submission.keywords, posting.keywords)
+                print(f"\nSubmission: {submission}\nSubmission Keywords: {submission.keywords}\nSimiliarity: {temp}")
                 if temp > best_dist:
                     best_dist = temp
                     best_sub = submission
@@ -90,8 +93,22 @@ class PostingViewSet(viewsets.ModelViewSet):
         if sel_sub is None:
             return Response({"detail": "No matching submission found."}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = SubmissionSerializer(sel_sub)
-        print(serializer.data)
+        serializer = SubmissionSerializer(sel_sub)        
+        
+        if serializer.data["video"]: 
+            print("url: " + serializer.data['video'])
+            ad_content = f"""
+            <video id="myVideo" width="560" height="315" autoplay muted playsinline controls>
+                <source src="{serializer.data["video"]}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            """
+        else: 
+            print("url: " + serializer.data['image'])
+            ad_content = f"""
+            <img id="myImage" src="{serializer.data["image"]}"/>
+            """
+            
         html_content = f"""
         <!DOCTYPE html>
         <html lang="en">
@@ -99,19 +116,32 @@ class PostingViewSet(viewsets.ModelViewSet):
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Test Video</title>
+            <style>
+                html, body {{
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                }}
+
+                img {{
+                max-width: 100%;
+                max-height: 100%;
+                width: auto;
+                height: auto;
+                object-fit: contain; /* Ensures the whole image fits inside */
+                }}
+            </style>
         </head>
         <body>
-
-            <h2>MP4 Video Test</h2>
-
-            <video id="myVideo" width="560" height="315" autoplay muted playsinline controls>
-                <source src="{serializer.data["video"]}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-
+            {ad_content}
         </body>
         </html>
         """
+        
+        print(html_content)
         return HttpResponse(html_content, content_type="text/html")  
 
     # @action(detail=False, methods=['post'])

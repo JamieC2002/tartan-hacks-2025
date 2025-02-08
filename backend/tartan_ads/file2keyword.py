@@ -46,25 +46,77 @@ def transcribe_audio(audio_file_path):
         return None
 
 def extract_keywords_from_text(text):
+    def clean_and_extract_keywords(keywords):
+        import re
+        # Remove dashes (-), newlines (\n), and extra spaces
+        cleaned_text = re.sub(r"[-,\n]", " ", keywords)  # Replace unwanted characters with spaces
+        
+        # Split into a list using whitespace and remove empty elements
+        keyword_list = [word.strip() for word in cleaned_text.split() if word.strip()]
+        keyword_set = set(keyword_list)
+        return keyword_set
+        
+    
     client = openai.OpenAI()
     try:
         # Prompt OpenAI's GPT model to extract relevant keywords from the text
-        prompt = f"Extract the most relevant keywords or key phrases from the following text:\n\n{text}\n\nKeywords:"
+        prompt = f"""
+        ### Task:
+        You are given a transcribed text version of an advertisement. 
+        Your goal is to extract **only the most relevant, precise, and meaningful keywords** that accurately represent the advertisement's content.
+
+        ### Instructions:
+
+        1. **Understand the Advertisement:**  
+        - Analyze the transcribed text to identify the key topics, themes, and core messages.
+
+        2. **Extract Only Relevant Keywords (No Phrases):**  
+        - Focus on **single words only** that **directly describe** the advertised product, service, or theme.  
+        - Do not include multi-word phrases.  
+        - Example of correct extraction: `["dishwasher", "cleaning", "technology"]`  
+        - Example of incorrect extraction (Do Not Do This): `["water-saving technology", "environmentally conscious households"]`  
+
+        3. **Exclude Unnecessary Words:**  
+        - Remove **filler words, generic adjectives**, and **irrelevant** terms.  
+        - Do not include **phrases** like `"run faster", "play longer"`.  
+
+        4. **Strict Output Format (No Extra Text):**  
+        - Return **only** a single **comma-separated string of keywords** (no extra text, no labels).  
+        - The output **must be formatted exactly like this**:  
+            ```
+            keyword1,keyword2,keyword3,keyword4
+            ```
+        - Do not return a list, JSON, or extra formatting.  
+
+        ### Example Input (Transcribed Advertisement):
+        "Introducing the all-new EcoClean dishwasher—built with advanced water-saving technology and a powerful cleaning system. 
+        EcoClean ensures spotless dishes while using 50% less water, making it the perfect choice for environmentally conscious households."
+
+        ### Example Output (Extracted Keywords) (Do Not Change Format):  
+        EcoClean,dishwasher,water-saving,cleaning,spotless,environmentally,technology
+        
+        ### Additional Requirements:
+        -  Return at least 5 but no more than 15 keywords per advertisement.
+        -  Ensure all extracted keywords are directly relevant to the product, service, or theme of the ad.
+        
+        Below is the transcribed text version of the advertisement:
+        {text}
+        """
         
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",  # You can use "gpt-3.5-turbo" or other chat-based models
+            model="gpt-4o",  # You can use "gpt-3.5-turbo" or other chat-based models
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": prompt}
-            ]
+            ],
         )
         
         # The API will return choices with a "message" field that contains the output
         keywords = response.choices[0].message.content.strip()
-        
+        print(f"OpenAi Results: {keywords}")
         # Convert the keywords into a list format by splitting them
-        keyword_list = keywords.split(',')
-        return [keyword.strip() for keyword in keyword_list]
+        keyword_list = clean_and_extract_keywords(keywords)
+        return sorted([keyword.strip().lower() for keyword in keyword_list])
     
     except Exception as e:
         print(f"Error during keyword extraction: {e}")
@@ -150,8 +202,11 @@ def main(video_url, keywords):
         os.remove(video_file_path)
 
 # # Testing usage
+# The code snippet `if __name__ == "__main__":` is a common Python idiom that
+# allows a script to be executed as the main program only if it is run directly,
+# not when it is imported as a module in another script.
 # if __name__ == "__main__":
-#     video_url = "https://hiloblobstorage.blob.core.windows.net/tartanads/IMG_4213.mp4" #url here
+#     video_url = "https://hiloblobstorage.blob.core.windows.net/tartanads/submissions_1_1739036602268.mp4" #url here
 #     keywords = []
 #     main(video_url, keywords)
 
