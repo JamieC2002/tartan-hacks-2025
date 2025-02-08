@@ -12,3 +12,5 @@ ffmpeg
 requests
 Image
 opencv-python
+pillow
+glob2

@@ -110,7 +110,7 @@ class PostingViewSet(viewsets.ModelViewSet):
             print("url: " + serializer.data['video'])
             ad_content = f"""
             <div class="video-container">
-                <video id="myVideo" autoplay muted playsinline controls>
+                <video id="myVideo" autoplay muted playsinline>
                     <source src="{serializer.data["video"]}" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>

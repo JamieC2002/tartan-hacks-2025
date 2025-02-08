@@ -149,6 +149,8 @@ def transcribe_audio(audio_file_path):
                 model="whisper-1",  # Whisper model
                 file=audio_file
             )
+            if "null" in response.text:
+                return None
             return response.text  # Extract transcribed text from the response
     except Exception as e:
         print(f"Error during transcription: {e}")
@@ -206,6 +208,7 @@ def extract_keywords_from_text(text):
         ### Additional Requirements:
         -  Return at least 5 but no more than 15 keywords per advertisement.
         -  Ensure all extracted keywords are directly relevant to the product, service, or theme of the ad.
+        -  IMPORTANT: IF THERE IS NO AUDIO OR YOU AREN'T CONFIDENCT IN RETRIEVING KEYWORDS, OUTPUT "null"
         
         Below is the transcribed text version of the advertisement:
         {text}
@@ -222,6 +225,8 @@ def extract_keywords_from_text(text):
         # The API will return choices with a "message" field that contains the output
         keywords = response.choices[0].message.content.strip()
         print(f"OpenAi Results: {keywords}")
+        if "null" in keywords:
+            return []
         # Convert the keywords into a list format by splitting them
         keyword_list = clean_and_extract_keywords(keywords)
         return sorted([keyword.strip().lower() for keyword in keyword_list])
@@ -237,15 +242,21 @@ def generate_random_string(length=12):
 
 
 # ✅ **Extract Keywords from Video (Frames + Audio)**
-def extract_keywords_from_video(mp4_path):
+def extract_keywords_from_video(video_url):
     """Extracts frames and audio from video, transcribes text, and extracts keywords."""
-    
-    print(f"Processing video: {mp4_path}")
+    video_file_path = "downloaded_video.mp4"
+    print(f"Downloading video from {video_url}...")
+    video_file_path = download_video_from_url(video_url, video_file_path)
 
-    # **Extract Frames and Analyze**
+    if not video_file_path:
+        print("Video download failed.")
+        return
 
+    print(f"Downloaded video: {video_file_path}")
+
+    audio_file_path = "extracted_audio.wav"
     # **Extract Audio and Transcribe**
-    audio_file_path = extract_audio_from_mp4(mp4_path, "extracted_audio.wav")
+    extract_audio_from_mp4(video_file_path, audio_file_path)
     transcription = transcribe_audio(audio_file_path)
 
     if transcription:
@@ -253,18 +264,21 @@ def extract_keywords_from_video(mp4_path):
         text_keywords = extract_keywords_from_text(transcription)
         print(f"=====Extracted Keywords from Audio: {text_keywords}")
     else:
-        text_keywords = ""
+        text_keywords = []
         
-    frame_keywords = extract_keywords_from_frames(mp4_path)
+    frame_keywords = extract_keywords_from_frames(video_file_path)
     print(f"=====Extracted Keywords from Frames: {frame_keywords}")
 
 
     # **Combine Keywords from Text & Images**
-    final_keywords = set(frame_keywords + text_keywords.split(","))
+    final_keywords = list(set(frame_keywords + text_keywords))
     print("=====Final Extracted Keywords: ",",".join(final_keywords))
 
     # **Cleanup**
-    os.remove("extracted_audio.wav")
+    if os.path.exists(audio_file_path):
+        os.remove(audio_file_path)
+    if os.path.exists(video_file_path):
+        os.remove(video_file_path)
 
     return final_keywords
 
