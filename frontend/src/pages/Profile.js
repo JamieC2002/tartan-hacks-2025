@@ -233,9 +233,43 @@ const Profile = () => {
       <div className="flex min-h-screen bg-gray-100">
         {/* Left Sidebar */}
         <div className="w-1/3 max-w-sm bg-white shadow-md p-6 flex flex-col items-center border-r">
-          <FaUser className="text-gray-500 text-6xl" />
+          {(user.user_type === "developer") && 
+            <div className="w-48 h-48 rounded-full overflow-hidden">
+              <img className="w-full h-full object-cover" src="https://blog.prototion.com/content/images/2021/09/peep-1.png" alt="" />
+            </div>
+          }
+          {(user.user_type === "content_creator") && 
+            <div className="w-48 h-48 rounded-full overflow-hidden">
+              <img className="w-full h-full object-cover" src="https://cdn.prod.website-files.com/63e37b9e98dcc91a51cc742f/651d72e5fb5e1d60c118fb72_avatar-1200x1200-651d725abb8ef.webp" alt="" />
+            </div>
+          }
+          {(user.user_type === "brand") && 
+            <div className="w-48 h-48 rounded-full overflow-hidden">
+              <img className="w-full h-full object-cover" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqy4Fe4iQxVay6VCxH8uXEaXUiVAY_wp9lRw&s" alt="" />
+            </div>
+          }
           <h2 className="mt-4 text-xl font-semibold">{user.username}</h2>
-          <p className="text-gray-600">{user.user_type} Account</p>
+          <p className={`text-lg font-semibold ${
+            user.user_type === "content_creator" ? "text-blue-500" :
+            user.user_type === "developer" ? "text-green-500" :
+            user.user_type === "brand" ? "text-purple-500" :
+            "text-gray-600"
+          }`}>
+            {user.user_type === "content_creator" && "🎥 Content Creator Account"}
+            {user.user_type === "developer" && "💻 Developer Account"}
+            {user.user_type === "brand" && "🏢 Brand Account"}
+          </p>
+          {(user.user_type === "developer" || user.user_type === "content_creator") && <h3 className="mt-4 text-xl font-semibold">
+            Earnings:
+            <span className="ml-2 text-green-600">
+              {new Intl.NumberFormat("en-US", { 
+                style: "currency", 
+                currency: "USD",
+                minimumFractionDigits: 4, // Ensures at least 4 decimal places
+                maximumFractionDigits: 6  // Allows up to 6 decimal places
+              }).format(user.money_earned)}
+            </span>
+          </h3>}
         </div>
 
         {/* Right Content Section */}
