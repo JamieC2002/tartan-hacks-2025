@@ -142,16 +142,16 @@ class PostingViewSet(viewsets.ModelViewSet):
                 img {{
                     max-width: 100%;
                     max-height: 100%;
-                    width: auto;
-                    height: auto;
+                    width: 100%;
+                    height: 80%;
                     object-fit: contain; /* Ensures the whole image fits inside */
                 }}
 
                 video {{
                     max-width: 100%;
                     max-height: 100%;
-                    width: auto;
-                    height: auto;
+                    width: 100%;
+                    height: 80%;
                     object-fit: contain; /* Ensures the whole image fits inside */
                 }}
 
@@ -178,7 +178,11 @@ class PostingViewSet(viewsets.ModelViewSet):
                     align-items: center;
                     justify-content: center;
                     width: 100%;
-                    height: 100%;
+                    height: 80%;
+                    margin-top: 0px;
+                    margin-bottom: 0px;
+                    padding-top: 0px;
+                    padding-bottom: 0px;
                 }}
             </style>
         </head>
