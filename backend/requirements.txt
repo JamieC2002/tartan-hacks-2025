@@ -10,3 +10,5 @@ moviepy
 pytesseract
 ffmpeg
 requests
+cv2
+Image
