@@ -8,6 +8,7 @@ import {
 import Login from './pages/Login'
 import Profile from './pages/Profile';
 import Register from './pages/Register';
+import Posting from './pages/Posting';
 import axios from 'axios';
 
 
@@ -21,6 +22,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/profile/:id" element={<Profile />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/posting/:id" element={<Posting />} />
       </Routes>
     </Router>
   );

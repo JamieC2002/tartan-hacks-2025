@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { FaUser, FaClipboardList, FaKey, FaPlus, FaTrash, FaTimes } from "react-icons/fa";
 import MainLayout from "../components/MainLayout";
 import axios from "axios";
@@ -21,6 +21,9 @@ const Profile = () => {
     keywords: [],
     keywordInput: "",
   });
+  const [trigger, setTrigger] = useState(false);
+  const [postings, setPostings] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -38,6 +41,13 @@ const Profile = () => {
     };
     fetchUser();
   }, [id]);
+
+  useEffect(() => {
+    axios.get(`/postings/?user_id=${id}`)
+    .then((response) => {
+      setPostings(response.data);
+    })
+  }, [trigger]);
 
   const handleOpenCampaignWindow = () => {
     setShowModal(true);
@@ -71,6 +81,11 @@ const Profile = () => {
     }
   };
 
+  const handleShowPosting = (postingId) => (e) => {
+    e.preventDefault();
+    navigate(`/posting/${postingId}/`);
+  }
+
   const handleCreateCampaign = (e) => {
     e.preventDefault();
     const userData = localStorage.getItem('user');
@@ -85,10 +100,8 @@ const Profile = () => {
         throw new Error("User ID is missing from stored user data.");
       }
 
-      console.log("userData:", userData);
-
       axios.post("/postings/", {
-        creator: userData["id"],
+        creator: user["id"],
         title: newCampaign["title"],
         description: newCampaign["description"],
         deadline: newCampaign["deadline"],
@@ -97,6 +110,7 @@ const Profile = () => {
         keywords: newCampaign["keywords"]
       }).then((response) => {
         console.log("posting create = ", response.data);
+        setTrigger(!trigger);
       })
     } catch (error) {
       alert(error.message);
@@ -138,13 +152,58 @@ const Profile = () => {
                   Create a Campaign
                 </button>
               </div>
-              <ul className="list-disc pl-6 text-gray-700">
-                {user.campaigns?.length > 0 ? (
-                  user.campaigns.map((campaign, index) => <li key={index}>{campaign}</li>)
-                ) : (
-                  <h1>No active campaigns</h1>
-                )}
-              </ul>
+              <div className="flex flex-col gap-2 pl-6 text-gray-700">
+              {postings.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {postings.map((posting, index) => (
+                    <div key={index} className="bg-white shadow-lg rounded-lg p-6 border border-gray-200 z-50 hover:cursor-pointer"
+                      onClick={handleShowPosting(posting.id)}
+                    >
+                      {/* Title */}
+                      <h2 className="text-xl font-bold text-gray-800 mb-2">{posting.title}</h2>
+
+                      {/* Description */}
+                      <p className="text-gray-600 mb-3 text-sm">{posting.description}</p>
+
+                      {/* Keywords */}
+                      {posting.keywords && posting.keywords.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {posting.keywords.map((keyword, idx) => (
+                            <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-600 text-xs font-semibold rounded-md">
+                              #{keyword}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Price Per Click & Percentage Cut */}
+                      <div className="flex justify-between items-center text-sm text-gray-700 mb-3">
+                        <span className="font-semibold">💰 ${posting.price_per_click} / click</span>
+                        <span className="font-semibold">✂️ {Math.round(posting.percentage_cut * 100)}% Cut</span>
+                      </div>
+
+                      {/* Deadline */}
+                      <p className="text-sm text-gray-500">
+                        ⏳ Deadline: <span className="font-medium">{new Date(posting.deadline).toLocaleString()}</span>
+                      </p>
+
+                      {/* Status */}
+                      <div className="mt-4">
+                        <span
+                          className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                            posting.is_active ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+                          }`}
+                        >
+                          {posting.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <h1 className="text-center text-gray-500 text-lg font-semibold">No active campaigns</h1>
+              )}
+              </div>
             </div>
           )}
 
