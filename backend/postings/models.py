@@ -20,6 +20,10 @@ class Posting(models.Model):
         validators=[MinValueValidator(Decimal("0.0000"))]
     )
     # format: 0.00 <= x.xxx <= 1.00
+    # percentage cut if the percentage of the money the content creators earn.
+    # Ex: price_per_click = ($)1.00, percentage_cut = 0.20, 
+    #     developer's money_earned += $0.80 per click
+    #     content creator's money_earnd += $0.20 per click
     percentage_cut = models.DecimalField(
         max_digits=3, decimal_places=2, default=0.00,
         validators=[MinValueValidator(Decimal("0.00")), MaxValueValidator(Decimal("1.00"))]
