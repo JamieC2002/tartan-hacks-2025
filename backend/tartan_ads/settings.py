@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'submissions',
     'postings',
     'corsheaders',
+    'apikeys'
 ]
 
 MIDDLEWARE = [

@@ -11,6 +11,7 @@ from postings.models import Posting
 from postings.serializers import PostingSerializer, ShowPostingSerializer, PostingSubmissionsSerializer, ContentCreatorPostingSerializer
 from users.models import User
 from django.shortcuts import get_object_or_404
+import os
 
 class PostingViewSet(viewsets.ModelViewSet):
     """Handles CRUD operations for postings"""
@@ -30,7 +31,7 @@ class PostingViewSet(viewsets.ModelViewSet):
         elif user.user_type == "content_creator":
             all_postings = ContentCreatorPostingSerializer(Posting.objects.all(), many=True, context={'user': user})
             return Response(all_postings.data, status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_200_OK)
 
     def retrieve(self, request, *args, **kwargs):
         posting = get_object_or_404(Posting, pk=kwargs["pk"])
@@ -115,28 +116,38 @@ class PostingViewSet(viewsets.ModelViewSet):
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Test Video</title>
             <style>
                 html, body {{
-                margin: 0;
-                padding: 0;
-                height: 100%;
-                display: flex;
-                justify-content: center;
-                align-items: center;
+                    margin: 0;
+                    padding: 0;
+                    height: 100%;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
                 }}
 
                 img {{
-                max-width: 100%;
-                max-height: 100%;
-                width: auto;
-                height: auto;
-                object-fit: contain; /* Ensures the whole image fits inside */
+                    max-width: 100%;
+                    max-height: 100%;
+                    width: auto;
+                    height: auto;
+                    object-fit: contain; /* Ensures the whole image fits inside */
                 }}
             </style>
+            <script>
+                function goToAd() {{
+                    const options = {{
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                    }}
+                    fetch("{os.environ['BACKEND_API_URL']}/users/{sel_sub.submitter.id}/pay/?posting_id={sel_post.id}", options);
+                }}
+            </script>
         </head>
         <body>
-            <button onclick="alert('hello world!')">
+            <button onclick="goToAd()">
                 {ad_content}
             </button>
         </body>
