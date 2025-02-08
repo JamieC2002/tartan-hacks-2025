@@ -24,4 +24,4 @@ class Submission(models.Model):
             raise ValidationError("Either an image or a video must be provided.")
 
     def __str__(self):
-        return f"Submission by {self.submitter} at {self.time_submitted}"
+        return f"Submission by {self.submitter} at {self.time_submit}"

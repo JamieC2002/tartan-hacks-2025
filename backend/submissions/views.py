@@ -1,9 +1,10 @@
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Submission
-from .serializers import SubmissionSerializer
-from .utilities import calculate_similarity
+from submissions.models import Submission
+from submissions.serializers import SubmissionSerializer
+from submissions.utilities import calculate_similarity
+from rest_framework import status
 
 class SubmissionViewSet(GenericViewSet):
     # QuerySet defines which data to fetch (all submissions in this case)
@@ -11,6 +12,14 @@ class SubmissionViewSet(GenericViewSet):
 
     # Serializer specifies how to convert the model data to JSON
     serializer_class = SubmissionSerializer
+
+    @action(detail=False, methods=["POST"], url_path="create")
+    def create_submission(self, request, *args, **kwargs):
+        serializer = SubmissionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=["GET"], url_path="filter-by-keywords")
     def filter_by_keywords(self, request):

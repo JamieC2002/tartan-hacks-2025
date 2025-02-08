@@ -8,5 +8,5 @@ router.register(r'submissions', SubmissionViewSet)
 
 # Wire up the router URLs
 urlpatterns = [
-    path('api/', include(router.urls)),
+    path('', include(router.urls)),
 ]
