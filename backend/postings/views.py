@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from postings.models import Posting
 from postings.serializers import PostingSerializer, ShowPostingSerializer, PostingSubmissionsSerializer, ContentCreatorPostingSerializer
 from users.models import User
+from apikeys.models import APIKey
 from django.shortcuts import get_object_or_404
 import os
 
@@ -41,9 +42,18 @@ class PostingViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'], url_path="get-ads")
     def get_ads(self, request):
         search_term = request.query_params.get('queryset', None)
-        
+        api_key = request.query_params.get("api_key", None)
+
+        if not api_key:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         if not search_term:
             return Response({"detail": "queryset parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        key_obj = APIKey.objects.filter(value=api_key).first()
+        if not key_obj:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        dev_user = key_obj.owner
 
         search_keywords = search_term.split(",")  
         print(f"Search Keywords extracted from queryset: {search_keywords}")
@@ -99,15 +109,18 @@ class PostingViewSet(viewsets.ModelViewSet):
         if serializer.data["video"]: 
             print("url: " + serializer.data['video'])
             ad_content = f"""
-            <video id="myVideo" width="560" height="315" autoplay muted playsinline controls>
-                <source src="{serializer.data["video"]}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
+            <div class="video-container">
+                <video id="myVideo" autoplay muted playsinline controls>
+                    <source src="{serializer.data["video"]}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <button class="visit-ad-btn" onclick="goToAd()">Visit Advertiser</button>
+            </div>
             """
         else: 
             print("url: " + serializer.data['image'])
             ad_content = f"""
-            <img id="myImage" src="{serializer.data["image"]}"/>
+            <img id="myImage" src="{serializer.data["image"]}" onclick="goToAd()"/>
             """
             
         html_content = f"""
@@ -133,23 +146,50 @@ class PostingViewSet(viewsets.ModelViewSet):
                     height: auto;
                     object-fit: contain; /* Ensures the whole image fits inside */
                 }}
-            </style>
-            <script>
-                function goToAd() {{
-                    const options = {{
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                        },
-                    }}
-                    fetch("{os.environ['BACKEND_API_URL']}/users/{sel_sub.submitter.id}/pay/?posting_id={sel_post.id}", options);
+
+                video {{
+                    max-width: 100%;
+                    max-height: 100%;
+                    width: auto;
+                    height: auto;
+                    object-fit: contain; /* Ensures the whole image fits inside */
                 }}
-            </script>
+
+                .visit-ad-btn {{
+                    margin-top: 10px;
+                    padding: 10px 15px;
+                    background-color: #ff4500;
+                    color: white;
+                    font-size: 16px;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    transition: background 0.3s;
+                }}
+
+                .visit-ad-btn:hover {{
+                    background-color: #e03e00;
+                }}
+
+                .video-container {{
+                    position: relative;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    height: 100%;
+                }}
+            </style>
         </head>
         <body>
-            <button onclick="goToAd()">
-                {ad_content}
-            </button>
+            <script>
+                function goToAd() {{
+                    fetch("{os.environ['BACKEND_API_URL']}/users/{sel_sub.submitter.id}/pay/?posting_id={sel_post.id}");
+                    fetch("{os.environ['BACKEND_API_URL']}/users/{dev_user.id}/pay/?posting_id={sel_post.id}");
+                }}
+            </script>
+            {ad_content}
         </body>
         </html>
         """

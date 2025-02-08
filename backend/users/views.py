@@ -9,6 +9,7 @@ from apikeys.models import APIKey
 from apikeys.serializers import APIKeySerializer
 from postings.models import Posting
 import string, secrets
+from decimal import Decimal
 
 def generate_random_string(length=12):
     characters = string.ascii_letters + string.digits  # A-Z, a-z, 0-9
@@ -60,10 +61,10 @@ class UserViewSet(GenericViewSet):
         
         # for creators
         if user.user_type == "content_creator":
-            user.money_earned += posting.price_per_click * posting.percentage_cut
+            user.money_earned += float(posting.price_per_click) * float(posting.percentage_cut)
             user.save()
         elif user.user_type == "developer":
-            user.money_earned += posting.price_per_click * (1 - posting.percentage_cut)
+            user.money_earned += float(posting.price_per_click) * (1 - float(posting.percentage_cut))
             user.save()
         return Response(status=status.HTTP_200_OK)
 
@@ -77,7 +78,6 @@ class UserViewSet(GenericViewSet):
                     owner=user,
                     value=generate_random_string()
                 )
-                print("new key:", key)
                 serializer = APIKeySerializer(key)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             else:
