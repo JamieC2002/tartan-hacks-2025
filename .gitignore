@@ -4,4 +4,5 @@ db.sqlite3
 .DS_Store
 venv
 my_env
+.venv
 .idea
