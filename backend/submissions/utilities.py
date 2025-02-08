@@ -1,38 +1,54 @@
 import openai
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+import os
 
 # Set your OpenAI API key
-openai.api_key = "ask-proj-jn-QvLD1eVCRlpQ0ZMc0Skb0Wu5O7qblUQNGTNITj7B7arsFCgylsHTiZ8s2y8pcvrI4L0MDm0T3BlbkFJO5O1P190N3h82003aPuk5RbN4QCyGVsTJG9VzMB3O-d7qGOcLotjakNGsxl3IuH710tIk67VQA"
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-def get_embeddings(text_list):
-    """Generate embeddings for a list of strings using OpenAI's API"""
-    response = openai.Embedding.create(
-        model="text-embedding-ada-002",  # You can also use "text-davinci-003" or other models
-        input=text_list
+# returns embedding vector of a string
+def get_embedding(text):
+    """Generate an embedding for a single string using OpenAI's API."""
+    response = openai.embeddings.create(
+        model="text-embedding-ada-002",  # Specify a valid embedding model
+        input=text
     )
-    embeddings = [embedding['embedding'] for embedding in response['data']]
-    return embeddings
+    # Extract the first and only embedding from the response
+    embedding = response.data[0].embedding
+    return embedding
 
-def calculate_similarity(list1, list2):
-    """Calculate the cosine similarity between two lists of strings."""
-    # Step 1: Get embeddings for both lists
-    embeddings1 = get_embeddings(list1)
-    embeddings2 = get_embeddings(list2)
-    
-    # Step 2: Compute cosine similarity between each pair of embeddings
-    cosine_similarities = cosine_similarity(embeddings1, embeddings2)
-    
-    # Step 3: Calculate average similarity score
-    average_similarity = np.mean(cosine_similarities)
-    
-    # Step 4: Return True if similarity is high (e.g., 0.8 or above), False otherwise
-    return average_similarity > 0.8  # Adjust the threshold as needed
+
+# PARAM: 2 lists of strings (keywords)
+# RETURN: single value outlining similarity
+def calculate_similarity(text_list_1, text_list_2):
+    """Calculate the cosine similarity between two concatenated strings from two lists of strings."""
+    if not text_list_1 or not text_list_2:
+        print("One or both of the text lists are empty.")
+        return None
+
+    # Concatenate each list into a single string
+    concatenated_text_1 = " ".join(text_list_1)
+    concatenated_text_2 = " ".join(text_list_2)
+
+    # Step 1: Get embeddings for both concatenated strings
+    embedding_1 = get_embedding(concatenated_text_1)
+    embedding_2 = get_embedding(concatenated_text_2)
+
+    # Check if embeddings were successfully retrieved
+    if not embedding_1 or not embedding_2:
+        print("Failed to retrieve embeddings.")
+        return None
+
+    # Step 2: Compute cosine similarity between the two embeddings
+    similarity_score = cosine_similarity([embedding_1], [embedding_2])[0][0]
+
+    # Step 3: Return the cosine similarity score
+    return similarity_score
 
 # Example usage:
-list1 = ["I love programming.", "Machine learning is fun."]
-list2 = ["Programming is awesome.", "I enjoy learning about machines."]
-result = calculate_similarity(list1, list2)
+list_1 = ["I love programming.", "AI is cool."]
+list_2 = ["Programming is fun.", "I enjoy AI projects."]
 
-print("Are the lists similar?", result)
-
+similarity_score = calculate_similarity(list_1, list_2)
+if similarity_score is not None:
+    print(f"Cosine similarity between the two text lists: {similarity_score:.4f}")
