@@ -29,6 +29,24 @@ const Posting = () => {
     fetchPosting();
   }, [id]);
 
+  const handleUpdateStatus = async (submissionId, currentStatus) => {
+    try {
+      const updatedStatus = !currentStatus;
+
+      // API call to update the submission status
+      await axios.patch(`/submissions/${submissionId}/`, { accepted: updatedStatus });
+
+      // Update the local state for just this submission
+      setSubmissions((prevSubmissions) =>
+        prevSubmissions.map((submission) =>
+          submission.id === submissionId ? { ...submission, accepted: updatedStatus } : submission
+        )
+      );
+    } catch (error) {
+      console.error("Error updating submission status:", error);
+    }
+  };
+
   if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
   if (!posting) return <div className="flex items-center justify-center h-screen">Posting not found</div>;
 
@@ -80,8 +98,8 @@ const Posting = () => {
 
           {submissions.length > 0 ? (
             <div className="space-y-4">
-              {submissions.map((submission, index) => (
-                <div key={index} className="bg-gray-100 p-4 rounded-lg shadow">
+              {submissions.map((submission) => (
+                <div key={submission.id} className="bg-gray-100 p-4 rounded-lg shadow">
                   {/* Submitter */}
                   <p className="text-sm text-gray-700 mb-2">
                     Submitted by: <span className="font-semibold">{submission.submitter}</span>
@@ -112,6 +130,16 @@ const Posting = () => {
                   <p className={`text-sm font-semibold ${submission.qualify ? "text-green-600" : "text-red-600"}`}>
                     {submission.qualify ? "✅ Qualified" : "❌ Not Qualified"}
                   </p>
+
+                  {/* Accept/Reject Button */}
+                  <button
+                    onClick={() => handleUpdateStatus(submission.id, submission.accepted)}
+                    className={`mt-2 px-4 py-2 rounded-lg shadow-md font-semibold text-white transition duration-300 ease-in-out 
+                      ${submission.accepted ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}
+                    `}
+                  >
+                    {submission.accepted ? "❌ Reject Submission" : "✅ Accept Submission"}
+                  </button>
                 </div>
               ))}
             </div>
