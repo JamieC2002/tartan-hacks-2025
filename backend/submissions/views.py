@@ -79,6 +79,7 @@ class SubmissionViewSet(GenericViewSet):
     def toggle_accept(self, request, *args, **kwargs):
         submission = self.get_object()
         submission.qualify = not submission.qualify
+        submission.save()
         return Response(status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["GET"], url_path="filter-by-keywords")
