@@ -7,6 +7,7 @@ import os
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # returns embedding vector of a string
+# helper function used in calc similarity
 def get_embedding(text):
     """Generate an embedding for a single string using OpenAI's API."""
     response = openai.embeddings.create(
@@ -45,10 +46,16 @@ def calculate_similarity(text_list_1, text_list_2):
     # Step 3: Return the cosine similarity score
     return similarity_score
 
+
+
 # Example usage:
 list_1 = ["I love programming.", "AI is cool."]
 list_2 = ["Programming is fun.", "I enjoy AI projects."]
 
+list_3 = ["peanut butter", "apple", "orange", "candy"]
+list_4 = ["cars", "buses", "airplanes", "Ford"]
+
 similarity_score = calculate_similarity(list_1, list_2)
-if similarity_score is not None:
-    print(f"Cosine similarity between the two text lists: {similarity_score:.4f}")
+similarity_score_2 = calculate_similarity(list_3, list_4)
+print(f"Cosine similarity between the two text lists: {similarity_score:.4f}")
+print(f"(2) Cosine similarity between the two text lists: {similarity_score_2:.4f}")
