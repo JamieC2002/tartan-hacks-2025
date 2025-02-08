@@ -204,6 +204,27 @@ const Profile = () => {
     });
   };
 
+  const handleCreateApiKey = async () => {
+    try {
+      const response = await axios.get(`/users/${id}/api-keys/?creating=true`);
+      setApiKeys([...apiKeys, response.data]);
+      console.log("response data = ", response.data);
+    } catch (error) {
+      console.error("Error creating API key:", error);
+      alert("Failed to create API key.");
+    }
+  };
+  
+  const handleDeleteApiKey = async (apiKey) => {
+    try {
+      await axios.delete(`/users/${id}/api-keys/?key_id=${apiKey.id}`);
+      setApiKeys(apiKeys.filter(key => key !== apiKey)); // Remove from state
+    } catch (error) {
+      console.error("Error deleting API key:", error);
+      alert("Failed to delete API key.");
+    }
+  };
+
   if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
   if (!user) return <div className="flex items-center justify-center h-screen">User not found</div>;
 
@@ -259,7 +280,7 @@ const Profile = () => {
                       {/* Price Per Click & Percentage Cut */}
                       <div className="flex justify-between items-center text-sm text-gray-700 mb-3">
                         <span className="font-semibold">💰 ${posting.price_per_click} / click</span>
-                        <span className="font-semibold">✂️ {Math.round(posting.percentage_cut * 100)}% Cut</span>
+                        <span className="font-semibold">✂️ {Math.round(posting.percentage_cut * 100)}% Cut for Creator</span>
                       </div>
 
                       {/* Deadline */}
@@ -394,6 +415,45 @@ const Profile = () => {
               )}
               </div>
           </div>
+          )}
+
+          {user.user_type === "developer" && (
+            <div className="flex flex-col gap-2">
+              {/* Header and Create API Key Button */}
+              <div className="flex flex-row gap-2 items-center">
+                <h3 className="text-lg font-semibold flex items-center">
+                  <FaKey className="mr-2 text-blue-500" /> Your API Keys
+                </h3>
+                <button
+                  className="flex flex-row items-center px-3 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:bg-blue-700 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+                  onClick={handleCreateApiKey}
+                >
+                  <FaPlus className="mr-1" />
+                  <span>Create API Key</span>
+                </button>
+              </div>
+
+              {/* API Key List */}
+              <div className="flex flex-col gap-2 pl-6 text-gray-700">
+                {apiKeys.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {apiKeys.map((apiKey, index) => (
+                      <div key={index} className="flex items-center justify-between bg-white shadow-lg rounded-lg p-4 border border-gray-200">
+                        <span className="text-sm font-mono break-all">{apiKey.value}</span>
+                        <button
+                          className="ml-2 p-2 bg-red-600 text-white rounded-lg shadow-md transition duration-300 ease-in-out transform hover:bg-red-700 hover:scale-105 focus:outline-none"
+                          onClick={() => handleDeleteApiKey(apiKey)}
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">No API keys found.</p>
+                )}
+              </div>
+            </div>
           )}
 
           {/* Modal for Creating a Campaign */}

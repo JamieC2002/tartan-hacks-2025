@@ -29,7 +29,7 @@ export default function ImageWithFullscreen({ submission }) {
           <img
             src={submission.image}
             alt="Fullscreen Submission"
-            className="w-auto h-auto max-w-screen max-h-screen object-contain"
+            className="w-auto h-auto max-w-screen max-h-screen object-fit"
           />
         </div>
       )}
