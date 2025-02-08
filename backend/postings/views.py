@@ -136,7 +136,9 @@ class PostingViewSet(viewsets.ModelViewSet):
             </style>
         </head>
         <body>
-            {ad_content}
+            <button onclick="alert('hello world!')">
+                {ad_content}
+            </button>
         </body>
         </html>
         """
