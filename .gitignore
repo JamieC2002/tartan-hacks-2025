@@ -7,3 +7,4 @@ venv
 my_env
 .venv
 .idea
+.env

@@ -6,6 +6,9 @@ from rest_framework.response import Response
 from .models import Submission
 from .serializers import SubmissionSerializer
 from tartan_ads.utilities import calculate_similarity
+from submissions.models import Submission
+from submissions.serializers import SubmissionSerializer
+from rest_framework import status
 
 class SubmissionViewSet(GenericViewSet):
     # QuerySet defines which data to fetch (all submissions in this case)
@@ -47,6 +50,14 @@ class SubmissionViewSet(GenericViewSet):
     
     Get Posting keywords -> Posting viewset
     """
+    @action(detail=False, methods=["POST"], url_path="create")
+    def create_submission(self, request, *args, **kwargs):
+        serializer = SubmissionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=False, methods=["GET"], url_path="filter-by-keywords")
     def filter_by_keywords(self, request):
         """

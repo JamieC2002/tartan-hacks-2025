@@ -23,16 +23,29 @@ const Navbar = () => {
       {/* Left Side: Logo */}
       <div className="text-2xl font-bold text-blue-600">TartanAds</div>
 
-      {/* Right Side: Icons */}
+      {/* Right Side: Icons & Links */}
       <div className="flex items-center space-x-6">
-        <FaHome className="text-gray-600 hover:text-blue-500 cursor-pointer text-2xl"
-          onClick={() => {
-            navigate("/");
-          }}
+        <FaHome
+          className="text-gray-600 hover:text-blue-500 cursor-pointer text-2xl"
+          onClick={() => navigate("/")}
         />
-        <FaUser className="text-gray-600 hover:text-blue-500 cursor-pointer text-2xl"
+        <FaUser
+          className="text-gray-600 hover:text-blue-500 cursor-pointer text-2xl"
           onClick={handleProfileClick}
         />
+        {/* Login & Register Links */}
+        <button
+          className="text-gray-600 hover:text-blue-500 font-medium"
+          onClick={() => navigate("/login")}
+        >
+          Login
+        </button>
+        <button
+          className="text-gray-600 hover:text-blue-500 font-medium"
+          onClick={() => navigate("/register")}
+        >
+          Register
+        </button>
       </div>
     </nav>
   );

@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { FaUser, FaClipboardList, FaKey, FaPlus, FaTrash, FaTimes } from "react-icons/fa";
+import { useNavigate, useParams } from "react-router-dom";
+import { FaUser, FaClipboardList, FaKey, FaPlus, FaTrash, FaTimes, FaTag } from "react-icons/fa";
 import MainLayout from "../components/MainLayout";
 import axios from "axios";
 import DatePicker from "react-datepicker";
+import { BlobServiceClient } from "@azure/storage-blob";
 import "react-datepicker/dist/react-datepicker.css";
+import { FaCheckCircle } from "react-icons/fa"; // Import checkmark icon
+
+const CONTAINER_NAME = "tartanads";
+const AZURE_STORAGE_ACCOUNT_NAME = "hiloblobstorage";
+const SAS_TOKEN = process.env.REACT_APP_AZURE_SAS_TOKEN;
 
 const Profile = () => {
   const { id } = useParams();
@@ -21,6 +27,27 @@ const Profile = () => {
     keywords: [],
     keywordInput: "",
   });
+  const [trigger, setTrigger] = useState(false);
+  const [postings, setPostings] = useState([]);
+  const navigate = useNavigate();
+
+  const [fileUploads, setFileUploads] = useState({}); // Stores file per postingId
+
+  const handleFileChange = (postingId) => (e) => {
+    const selectedFile = e.target.files[0];
+  
+    if (selectedFile) {
+      const fileType = selectedFile.type.split("/")[0]; // "image" or "video"
+      if (fileType === "image" || fileType === "video") {
+        setFileUploads((prev) => ({
+          ...prev,
+          [postingId]: selectedFile, // Store file for specific postingId
+        }));
+      } else {
+        alert("Please upload an image or video file.");
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -39,8 +66,71 @@ const Profile = () => {
     fetchUser();
   }, [id]);
 
+  useEffect(() => {
+    axios.get(`/postings/?user_id=${id}`)
+    .then((response) => {
+      console.log("postings stuff = ", response.data);
+      setPostings(response.data);
+    })
+  }, [trigger]);
+
   const handleOpenCampaignWindow = () => {
     setShowModal(true);
+  };
+
+
+  const handleCreateSubmission = (postingId) => async (e) => {
+    e.preventDefault();
+  
+    const file = fileUploads[postingId]; // Get the file for the specific postingId
+  
+    if (!file) {
+      alert("Please select a file before submitting.");
+      return;
+    }
+  
+    try {
+      // ✅ Use SAS Token instead of Connection String
+      const blobServiceClient = new BlobServiceClient(
+        `https://${AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net?${SAS_TOKEN}`
+      );
+  
+      const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
+  
+      const fileExtension = file.name.split(".").pop();
+      const uniqueFileName = `submissions_${postingId}_${Date.now()}.${fileExtension}`;
+  
+      const blockBlobClient = containerClient.getBlockBlobClient(uniqueFileName);
+  
+      // Convert File to ArrayBuffer before upload
+      const arrayBuffer = await file.arrayBuffer();
+  
+      await blockBlobClient.uploadData(new Uint8Array(arrayBuffer), {
+        blobHTTPHeaders: { blobContentType: file.type },
+      });
+  
+      const fileUrl = `https://${containerClient.accountName}.blob.core.windows.net/${CONTAINER_NAME}/${uniqueFileName}`;
+  
+      const userData = JSON.parse(localStorage.getItem("user"));
+      await axios.post(`/submissions/create/`, {
+        poster: postingId,
+        submitter: userData.id,
+        image: file.type.startsWith("image") ? fileUrl : null,
+        video: file.type.startsWith("video") ? fileUrl : null,
+        description: "User submitted content",
+        qualify: false,
+      });
+  
+      alert("Submission uploaded successfully!");
+  
+      setFileUploads((prev) => ({
+        ...prev,
+        [postingId]: null,
+      }));
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert("Failed to upload submission.");
+    }
   };
 
   const handleCloseModal = () => {
@@ -71,6 +161,11 @@ const Profile = () => {
     }
   };
 
+  const handleShowPosting = (postingId) => (e) => {
+    e.preventDefault();
+    navigate(`/posting/${postingId}/`);
+  }
+
   const handleCreateCampaign = (e) => {
     e.preventDefault();
     const userData = localStorage.getItem('user');
@@ -85,10 +180,8 @@ const Profile = () => {
         throw new Error("User ID is missing from stored user data.");
       }
 
-      console.log("userData:", userData);
-
       axios.post("/postings/", {
-        creator: userData["id"],
+        creator: user["id"],
         title: newCampaign["title"],
         description: newCampaign["description"],
         deadline: newCampaign["deadline"],
@@ -97,6 +190,7 @@ const Profile = () => {
         keywords: newCampaign["keywords"]
       }).then((response) => {
         console.log("posting create = ", response.data);
+        setTrigger(!trigger);
       })
     } catch (error) {
       alert(error.message);
@@ -138,14 +232,168 @@ const Profile = () => {
                   Create a Campaign
                 </button>
               </div>
-              <ul className="list-disc pl-6 text-gray-700">
-                {user.campaigns?.length > 0 ? (
-                  user.campaigns.map((campaign, index) => <li key={index}>{campaign}</li>)
-                ) : (
-                  <h1>No active campaigns</h1>
-                )}
-              </ul>
+              <div className="flex flex-col gap-2 pl-6 text-gray-700">
+              {postings.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {postings.map((posting, index) => (
+                    <div key={index} className="bg-white shadow-lg rounded-lg p-6 border border-gray-200 z-50 hover:cursor-pointer"
+                      onClick={handleShowPosting(posting.id)}
+                    >
+                      {/* Title */}
+                      <h2 className="text-xl font-bold text-gray-800 mb-2">{posting.title}</h2>
+
+                      {/* Description */}
+                      <p className="text-gray-600 mb-3 text-sm">{posting.description}</p>
+
+                      {/* Keywords */}
+                      {posting.keywords && posting.keywords.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {posting.keywords.map((keyword, idx) => (
+                            <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-600 text-xs font-semibold rounded-md">
+                              #{keyword}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Price Per Click & Percentage Cut */}
+                      <div className="flex justify-between items-center text-sm text-gray-700 mb-3">
+                        <span className="font-semibold">💰 ${posting.price_per_click} / click</span>
+                        <span className="font-semibold">✂️ {Math.round(posting.percentage_cut * 100)}% Cut</span>
+                      </div>
+
+                      {/* Deadline */}
+                      <p className="text-sm text-gray-500">
+                        ⏳ Deadline: <span className="font-medium">{new Date(posting.deadline).toLocaleString()}</span>
+                      </p>
+
+                      {/* Status */}
+                      <div className="mt-4">
+                        <span
+                          className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                            posting.is_active ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+                          }`}
+                        >
+                          {posting.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <h1 className="text-center text-gray-500 text-lg font-semibold">No active campaigns</h1>
+              )}
+              </div>
             </div>
+          )}
+
+          {user.user_type === "content_creator" && (
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-row gap-2 items-center">
+                <h3 className="text-lg font-semibold flex items-center">
+                  <FaTag className="mr-2 text-blue-500" /> Available Campaigns
+                </h3>
+              </div>
+              <div className="flex flex-col gap-2 pl-6 text-gray-700">
+              {postings.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {postings.map((posting, index) => (
+                    <div key={index} className="bg-white shadow-lg rounded-lg p-6 border border-gray-200 z-50 hover:cursor-pointer">
+                      {/* Title */}
+                      <h2 className="text-xl font-bold text-gray-800 mb-2">{posting.title}</h2>
+
+                      {/* Description */}
+                      <p className="text-gray-600 mb-3 text-sm">{posting.description}</p>
+
+                      {/* Keywords */}
+                      {posting.keywords && posting.keywords.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {posting.keywords.map((keyword, idx) => (
+                            <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-600 text-xs font-semibold rounded-md">
+                              #{keyword}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Price Per Click & Percentage Cut */}
+                      <div className="flex justify-between items-center text-sm text-gray-700 mb-3">
+                        <span className="font-semibold">💰 ${posting.price_per_click} / click</span>
+                        <span className="font-semibold">✂️ {Math.round(posting.percentage_cut * 100)}% Cut</span>
+                      </div>
+
+                      {/* Deadline */}
+                      <p className="text-sm text-gray-500">
+                        ⏳ Deadline: <span className="font-medium">{new Date(posting.deadline).toLocaleString()}</span>
+                      </p>
+
+                      {/* Status */}
+                      <div className="mt-4">
+                        <span
+                          className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                            posting.is_active ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+                          }`}
+                        >
+                          {posting.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+
+                      {(!posting.has_submitted) ? <div className="flex flex-col items-center">
+                        <div className="flex flex-col items-center">
+                          <button
+                            onClick={() => document.getElementById(`fileInput-${posting.id}`).click()}
+                            className="mt-4 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:bg-blue-700 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+                          >
+                            Upload File
+                          </button>
+
+                          <input
+                            type="file"
+                            id={`fileInput-${posting.id}`}
+                            accept="image/*,video/*"
+                            className="hidden"
+                            onChange={handleFileChange(posting.id)}
+                          />
+
+                          {/* File Preview for the specific posting */}
+                          {fileUploads[posting.id] && (
+                            <div className="mt-4">
+                              {fileUploads[posting.id].type.startsWith("image") ? (
+                                <img
+                                  src={URL.createObjectURL(fileUploads[posting.id])}
+                                  alt="Preview"
+                                  className="w-64 h-40 object-cover rounded-lg shadow"
+                                />
+                              ) : (
+                                <video controls className="w-64 h-40 rounded-lg shadow">
+                                  <source src={URL.createObjectURL(fileUploads[posting.id])} type={fileUploads[posting.id].type} />
+                                  Your browser does not support the video tag.
+                                </video>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        <button
+                          onClick={handleCreateSubmission(posting.id)}
+                          className="mt-4 px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:bg-green-700 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50"
+                        >
+                          Submit
+                        </button>
+                      </div> : <div className="flex flex-col items-center">
+                        <div className="flex flex-row items-center space-x-2 text-green-600 font-semibold text-lg">
+                          <FaCheckCircle className="text-2xl" />
+                          <span>Submitted!</span>
+                        </div>
+                      </div>}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <h1 className="text-center text-gray-500 text-lg font-semibold">No active campaigns</h1>
+              )}
+              </div>
+          </div>
           )}
 
           {/* Modal for Creating a Campaign */}
