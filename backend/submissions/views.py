@@ -57,6 +57,12 @@ class SubmissionViewSet(GenericViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=["GET"], url_path="toggle-accept")
+    def toggle_accept(self, request, *args, **kwargs):
+        submission = self.get_object()
+        submission.qualify = not submission.qualify
+        return Response(status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["GET"], url_path="filter-by-keywords")
     def filter_by_keywords(self, request):
