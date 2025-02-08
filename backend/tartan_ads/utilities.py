@@ -10,7 +10,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 # helper function used in calc similarity
 def get_embedding(text):
     """Generate an embedding for a single string using OpenAI's API."""
-    response = openai.Embedding.create(
+    response = openai.embeddings.create(
         model="text-embedding-ada-002",  # Specify a valid embedding model
         input=text
     )
