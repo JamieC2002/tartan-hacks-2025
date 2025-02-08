@@ -32,6 +32,7 @@ CORS_ALLOWED_ORIGINS = ["http://*", "https://*"]
 
 CORS_ALLOW_HEADERS = ["*"]
 CORS_ALLOW_ALL_ORIGINS = True
+X_FRAME_OPTIONS = 'ALLOWALL'
 
 # Application definition
 

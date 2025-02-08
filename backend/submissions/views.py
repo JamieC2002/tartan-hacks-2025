@@ -1,9 +1,11 @@
+from django.http import HttpResponse
+from django.templatetags.static import static
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Submission
 from .serializers import SubmissionSerializer
-from .utilities import calculate_similarity
+from tartan_ads.utilities import calculate_similarity
 
 class SubmissionViewSet(GenericViewSet):
     # QuerySet defines which data to fetch (all submissions in this case)
@@ -11,7 +13,40 @@ class SubmissionViewSet(GenericViewSet):
 
     # Serializer specifies how to convert the model data to JSON
     serializer_class = SubmissionSerializer
+    
+    @action(detail=False, methods=["GET"], url_path="test")
+    def test(self, request):
+        """Return an HTML page displaying the MP4 video with autoplay and unmute button"""
+        
+        video_url = "https://www.w3schools.com/tags/movie.mp4"  # Sample video URL
 
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Test Video</title>
+        </head>
+        <body>
+
+            <h2>MP4 Video Test</h2>
+
+            <video id="myVideo" width="560" height="315" autoplay muted playsinline controls>
+                <source src="{video_url}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+
+        </body>
+        </html>
+        """
+        return HttpResponse(html_content, content_type="text/html")  
+
+    """
+    APIs
+    
+    Get Posting keywords -> Posting viewset
+    """
     @action(detail=False, methods=["GET"], url_path="filter-by-keywords")
     def filter_by_keywords(self, request):
         """
@@ -31,7 +66,8 @@ class SubmissionViewSet(GenericViewSet):
             if calculate_similarity(submission, search_term)
         ]
         
-        # Process filtered_submissions to retireve top N submissions
+        # Process filtered_submissions to retrieve top N submissions
+        # Map to the Submission Objects
 
         # Serialize the filtered submissions
         serializer = self.get_serializer(filtered_submissions, many=True)

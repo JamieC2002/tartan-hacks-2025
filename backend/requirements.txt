@@ -6,3 +6,7 @@ djangorestframework-simplejwt
 openai==0.28
 numpy
 scikit-learn
+moviepy
+pytesseract
+ffmpeg
+requests
