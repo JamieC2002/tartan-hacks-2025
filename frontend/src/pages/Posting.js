@@ -34,12 +34,12 @@ const Posting = () => {
       const updatedStatus = !currentStatus;
 
       // API call to update the submission status
-      await axios.patch(`/submissions/${submissionId}/`, { accepted: updatedStatus });
+      await axios.get(`/submissions/${submissionId}/toggle-accept/`);
 
       // Update the local state for just this submission
       setSubmissions((prevSubmissions) =>
         prevSubmissions.map((submission) =>
-          submission.id === submissionId ? { ...submission, accepted: updatedStatus } : submission
+          submission.id === submissionId ? { ...submission, qualify: updatedStatus } : submission
         )
       );
     } catch (error) {
@@ -133,12 +133,12 @@ const Posting = () => {
 
                   {/* Accept/Reject Button */}
                   <button
-                    onClick={() => handleUpdateStatus(submission.id, submission.accepted)}
+                    onClick={() => handleUpdateStatus(submission.id, submission.qualify)}
                     className={`mt-2 px-4 py-2 rounded-lg shadow-md font-semibold text-white transition duration-300 ease-in-out 
-                      ${submission.accepted ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}
+                      ${submission.qualify ? "bg-red-800 hover:bg-red-900" : "bg-blue-600 hover:bg-blue-700"}
                     `}
                   >
-                    {submission.accepted ? "❌ Reject Submission" : "✅ Accept Submission"}
+                    {submission.qualify ? "❌ Reject Submission" : "✅ Accept Submission"}
                   </button>
                 </div>
               ))}
