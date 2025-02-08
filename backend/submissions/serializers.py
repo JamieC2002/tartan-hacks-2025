@@ -11,6 +11,8 @@ class SubmissionSerializer(serializers.ModelSerializer):
         if not data.get('image') and not data.get('video'):
             raise serializers.ValidationError("Either an image or a video must be provided.")
         return data
+    
+    
 
 
 class ShowSubmissionSerializer(serializers.ModelSerializer):
