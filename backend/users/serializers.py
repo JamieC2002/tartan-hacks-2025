@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from users.models import User
+from apikeys.serializers import APIKeySerializer
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(required=True, allow_null=False, allow_blank=False, write_only=True)
@@ -24,6 +25,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         return email
 
 class UserSerializer(serializers.ModelSerializer):
+    api_keys = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -32,6 +35,12 @@ class UserSerializer(serializers.ModelSerializer):
             "password",
             "user_type",
             "money_earned",
-            "developer_api_key",
+            "api_keys",
             "brand_budget"
         ]
+
+    def get_api_keys(self, obj):
+        if obj.user_type == "developer":
+            serializer = APIKeySerializer(obj.api_keys.all(), many=True)
+            return serializer.data
+        return []
