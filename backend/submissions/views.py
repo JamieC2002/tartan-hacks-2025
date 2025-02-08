@@ -1,10 +1,9 @@
-from rest_framework import viewsets
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Submission
 from .serializers import SubmissionSerializer
-from .utilities import get_embeddings, calculate_similarity
+from .utilities import calculate_similarity
 
 class SubmissionViewSet(GenericViewSet):
     # QuerySet defines which data to fetch (all submissions in this case)
@@ -18,6 +17,7 @@ class SubmissionViewSet(GenericViewSet):
         """
         Custom GET action to filter submissions by matching keywords and checking 'qualify' status.
         """
+        # Retrieve keywords from posting
         search_term = request.query_params.get('keyword', None)  # Get the search keyword from the query params
         if not search_term:
             return Response({"error": "keyword parameter is required"}, status=400)
@@ -28,8 +28,10 @@ class SubmissionViewSet(GenericViewSet):
         # Further filter submissions based on matching keywords
         filtered_submissions = [
             submission for submission in queryset
-            if calculate_similarity(get_embeddings(submission.keywords), search_term)
+            if calculate_similarity(submission, search_term)
         ]
+        
+        # Process filtered_submissions to retireve top N submissions
 
         # Serialize the filtered submissions
         serializer = self.get_serializer(filtered_submissions, many=True)

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Posting
 
 class PostingSerializer(serializers.ModelSerializer):
-    creator_username = serializers.CharField(source='creator.username', read_only=True)
+    creator_email = serializers.CharField(source='creator.email', read_only=True)
     
     def validate_keywords(self, value):
         """Ensure that keywords is always a list of strings"""

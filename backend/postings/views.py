@@ -9,3 +9,6 @@ class PostingViewSet(viewsets.ModelViewSet):
     """Handles CRUD operations for postings"""
     queryset = Posting.objects.all()
     serializer_class = PostingSerializer
+    
+    # @action(detail=False, methods=['post'])
+    # def get_ads(self, request, pk=None):
