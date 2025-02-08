@@ -1,9 +1,9 @@
-from openai import OpenAI
 import openai
 import moviepy as mp 
 import os
 import requests
 from io import BytesIO
+import string, secrets
 
 # Set your OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -32,7 +32,7 @@ def extract_audio_from_mp4(mp4_file_path, output_audio_path):
 
 # Function to transcribe audio using OpenAI Whisper
 def transcribe_audio(audio_file_path):
-    client = OpenAI()
+    client = openai.OpenAI()
     try:
         with open(audio_file_path, 'rb') as audio_file:
             # Use Whisper API to transcribe the audio
@@ -46,7 +46,7 @@ def transcribe_audio(audio_file_path):
         return None
 
 def extract_keywords_from_text(text):
-    client = OpenAI()
+    client = openai.OpenAI()
     try:
         # Prompt OpenAI's GPT model to extract relevant keywords from the text
         prompt = f"Extract the most relevant keywords or key phrases from the following text:\n\n{text}\n\nKeywords:"
@@ -70,46 +70,84 @@ def extract_keywords_from_text(text):
         print(f"Error during keyword extraction: {e}")
         return []
     
+def generate_random_string(length=12):
+    characters = string.ascii_letters + string.digits  # A-Z, a-z, 0-9
+    return ''.join(secrets.choice(characters) for _ in range(length))
+
+
+def extract_keywords_from_video(video_url):
+    video_file_path = "downloaded_video.mp4"
+    print(f"Downloading video from {video_url}...")
+    video_file_path = download_video_from_url(video_url, video_file_path)
+
+    if not video_file_path:
+        print("Video download failed.")
+        return
+
+    print(f"Downloaded video: {video_file_path}")
+
+    audio_file_path = "extracted_audio.wav"
+
+    print(f"Extracting audio from {video_file_path}...")
+    extract_audio_from_mp4(video_file_path, audio_file_path)
+
+    print(f"Transcribing audio from {audio_file_path}...")
+    transcription = transcribe_audio(audio_file_path)
+
+    if transcription:
+        print("Transcription Result:\n", transcription)
+        
+        print("Extracting keywords...")
+        keywords = extract_keywords_from_text(transcription)
+        print("Extracted Keywords:", keywords)
+        return keywords
+    else:
+        print("Transcription failed.")
+
+    if os.path.exists(audio_file_path):
+        os.remove(audio_file_path)
+    if os.path.exists(video_file_path):
+        os.remove(video_file_path)
 
 # Main function to download video, extract audio, transcribe and get keywords
 # PARAM[out] list of relevant keywords extracted from video
-# def main(video_url, keywords):
-#     # Step 1: Download the video from the URL
-#     video_file_path = "downloaded_video.mp4"  # Path to save the downloaded video
-#     print(f"Downloading video from {video_url}...")
-#     video_file_path = download_video_from_url(video_url, video_file_path)
+def main(video_url, keywords):
+    # Step 1: Download the video from the URL
+    video_file_path = "downloaded_video.mp4"  # Path to save the downloaded video
+    print(f"Downloading video from {video_url}...")
+    video_file_path = download_video_from_url(video_url, video_file_path)
 
-#     if not video_file_path:
-#         print("Video download failed.")
-#         return
+    if not video_file_path:
+        print("Video download failed.")
+        return
 
-#     print(f"Downloaded video: {video_file_path}")
+    print(f"Downloaded video: {video_file_path}")
 
-#     audio_file_path = "extracted_audio.wav"  # Path to save extracted audio
+    audio_file_path = "extracted_audio.wav"  # Path to save extracted audio
 
-#     # Step 2: Extract audio from the MP4 file
-#     print(f"Extracting audio from {video_file_path}...")
-#     extract_audio_from_mp4(video_file_path, audio_file_path)
+    # Step 2: Extract audio from the MP4 file
+    print(f"Extracting audio from {video_file_path}...")
+    extract_audio_from_mp4(video_file_path, audio_file_path)
 
-#     # Step 3: Transcribe audio using OpenAI Whisper
-#     print(f"Transcribing audio from {audio_file_path}...")
-#     transcription = transcribe_audio(audio_file_path)
+    # Step 3: Transcribe audio using OpenAI Whisper
+    print(f"Transcribing audio from {audio_file_path}...")
+    transcription = transcribe_audio(audio_file_path)
 
-#     if transcription:
-#         print("Transcription Result:\n", transcription)
+    if transcription:
+        print("Transcription Result:\n", transcription)
         
-#         # Step 4: Extract keywords from the transcription
-#         print("Extracting keywords...")
-#         keywords = extract_keywords_from_text(transcription)
-#         print("Extracted Keywords:", keywords)
-#     else:
-#         print("Transcription failed.")
+        # Step 4: Extract keywords from the transcription
+        print("Extracting keywords...")
+        keywords = extract_keywords_from_text(transcription)
+        print("Extracted Keywords:", keywords)
+    else:
+        print("Transcription failed.")
 
-#     # Clean up extracted audio file and video
-#     if os.path.exists(audio_file_path):
-#         os.remove(audio_file_path)
-#     if os.path.exists(video_file_path):
-#         os.remove(video_file_path)
+    # Clean up extracted audio file and video
+    if os.path.exists(audio_file_path):
+        os.remove(audio_file_path)
+    if os.path.exists(video_file_path):
+        os.remove(video_file_path)
 
 # # Testing usage
 # if __name__ == "__main__":
@@ -120,65 +158,55 @@ def extract_keywords_from_text(text):
 import cv2
 import numpy as np
 from PIL import Image
-import pytesseract
-
-def download_image(photo_url):
-    """Downloads an image from a URL and returns it as a NumPy array."""
-    try:
-        response = requests.get(photo_url, stream=True)
-        if response.status_code == 200:
-            img = Image.open(BytesIO(response.content))
-            return np.array(img)
-        else:
-            print(f"Failed to download image. Status code: {response.status_code}")
-            return None
-    except Exception as e:
-        print(f"Error downloading image: {e}")
-        return None
 
 def preprocess_image(photo_url):
-    """Converts an image to grayscale and applies thresholding."""
-    img_array = download_image(photo_url)
-    if img_array is None:
-        return None
+    image_file_path = "downloaded_image"
+    image_file_path = download_video_from_url(photo_url, image_file_path)
 
-    image = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)  # Convert to grayscale
+    if not image_file_path:
+        print("Image download failed.")
+        return
+
+    image = cv2.imread(image_file_path, cv2.IMREAD_GRAYSCALE)  # Convert to grayscale
+    print("image:", image)
     _, binary_image = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY)  # Convert to black & white
+    print("binary_img:", binary_image)
     return binary_image
 
-def extracted_text(photo_url):
-    """Extracts text from an image using OCR."""
-    preprocessed_img = preprocess_image(photo_url)
-    if preprocessed_img is None:
-        return ""
+import pytesseract
 
+def extract_text(photo_url):
+    preprocessed_img = preprocess_image(photo_url)
+    print("preprocessed_img:", preprocessed_img)
     text = pytesseract.image_to_string(preprocessed_img)
-    return text.strip()
+    return text
 
 def filter_relevant_words(text, keywords):
-    """Filters words based on relevance to given keywords."""
     words = text.lower().split()
     relevant_words = [word for word in words if word in keywords]
     return relevant_words
 
-def main(photo_url, keywords):
+def extract_keywords_from_picture(photo_url):
     """Processes an image, extracts text, and filters relevant words."""
-    print(f"Processing image: {photo_url}")
-
-    text = extracted_text(photo_url)
-    if not text:
-        print("No text extracted from image.")
-        return
-
-    print("\nExtracted Text:")
-    print(text)
-
-    relevant_words = filter_relevant_words(text, keywords)
-    
-    print("\nRelevant Words:")
-    print(relevant_words if relevant_words else "No relevant words found.")
-
-if __name__ == "__main__":
-    photo_url = "https://hiloblobstorage.blob.core.windows.net/tartanads/bestgreenveggies.jpeg"  # photo URL
-    keywords = []
-    main(photo_url, keywords)
+    client = openai.OpenAI()
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Give me a comma-separated string of keywords extracted from this image. Output that and nothing else."},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": photo_url
+                        },
+                    },
+                ],
+            }
+        ],
+        max_tokens=300,
+    )
+    keywords = response.choices[0].message.content
+    print(response.choices[0].message.content)
+    return keywords.split(", ")
