@@ -117,11 +117,55 @@ def extract_keywords_from_text(text):
 #     keywords = []
 #     main(video_url, keywords)
 
+import cv2
+import numpy as np
+from PIL import Image
+import pytesseract
+
+def download_image(photo_url):
+    """Downloads an image from a URL and returns it as a NumPy array."""
+    try:
+        response = requests.get(photo_url, stream=True)
+        if response.status_code == 200:
+            img = Image.open(BytesIO(response.content))
+            return np.array(img)
+        else:
+            print(f"Failed to download image. Status code: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"Error downloading image: {e}")
+        return None
+
+def preprocess_image(photo_url):
+    """Converts an image to grayscale and applies thresholding."""
+    img_array = download_image(photo_url)
+    if img_array is None:
+        return None
+
+    image = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)  # Convert to grayscale
+    _, binary_image = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY)  # Convert to black & white
+    return binary_image
+
+def extracted_text(photo_url):
+    """Extracts text from an image using OCR."""
+    preprocessed_img = preprocess_image(photo_url)
+    if preprocessed_img is None:
+        return ""
+
+    text = pytesseract.image_to_string(preprocessed_img)
+    return text.strip()
+
+def filter_relevant_words(text, keywords):
+    """Filters words based on relevance to given keywords."""
+    words = text.lower().split()
+    relevant_words = [word for word in words if word in keywords]
+    return relevant_words
+
 def main(photo_url, keywords):
     """Processes an image, extracts text, and filters relevant words."""
     print(f"Processing image: {photo_url}")
 
-    text = extract_text(photo_url)
+    text = extracted_text(photo_url)
     if not text:
         print("No text extracted from image.")
         return
@@ -135,29 +179,6 @@ def main(photo_url, keywords):
     print(relevant_words if relevant_words else "No relevant words found.")
 
 if __name__ == "__main__":
-    photo_url = photo_url = "https://www.google.com/url?sa=i&url=https%3A%2F%2Fsimple-veganista.com%2Fgreen-vegetables%2F&psig=AOvVaw3RyN9Kc6vex4ivitMIzsoM&ust=1739101275790000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCLiq3p__s4sDFQAAAAAdAAAAABAg"  #photo url
+    photo_url = "https://hiloblobstorage.blob.core.windows.net/tartanads/bestgreenveggies.jpeg"  # photo URL
     keywords = []
     main(photo_url, keywords)
-
-import cv2
-import numpy as np
-from PIL import Image
-
-def preprocess_image(photo_url):
-    image = cv2.imread(photo_url, cv2.IMREAD_GRAYSCALE)  # Convert to grayscale
-    _, binary_image = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY)  # Convert to black & white
-    return binary_image
-
-import pytesseract
-
-def extract_text(photo_url):
-    preprocessed_img = preprocess_image(photo_url)
-    text = pytesseract.image_to_string(preprocessed_img)
-    return text
-
-def filter_relevant_words(text, keywords):
-    words = text.lower().split()
-    relevant_words = [word for word in words if word in keywords]
-    return relevant_words
-
-
