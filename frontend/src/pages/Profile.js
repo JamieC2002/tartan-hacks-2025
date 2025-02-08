@@ -191,9 +191,11 @@ const Profile = () => {
       }).then((response) => {
         console.log("posting create = ", response.data);
         setTrigger(!trigger);
+        handleCloseModal();
       })
     } catch (error) {
       alert(error.message);
+      handleCloseModal();
     }
   }
 

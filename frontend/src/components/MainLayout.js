@@ -2,9 +2,9 @@ import Navbar from "./Navbar"
 
 const MainLayout = ({ children }) => {
   return (
-    <div>
+    <div className="flex flex-col min-h-screen">
       <Navbar />
-      <div>
+      <div className="min-h-screen">
         {children}
       </div>
     </div>
