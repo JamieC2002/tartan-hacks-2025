@@ -73,11 +73,13 @@ class UserViewSet(GenericViewSet):
         is_creating = (request.query_params.get("creating", None) == "true")
         if request.method == "GET":
             if is_creating:
-                APIKey.objects.create(
+                key = APIKey.objects.create(
                     owner=user,
                     value=generate_random_string()
                 )
-                return Response(status=status.HTTP_200_OK)
+                print("new key:", key)
+                serializer = APIKeySerializer(key)
+                return Response(serializer.data, status=status.HTTP_200_OK)
             else:
                 serializer = APIKeySerializer(user.api_keys.all(), many=True)
                 return Response(serializer.data, status=status.HTTP_200_OK)
