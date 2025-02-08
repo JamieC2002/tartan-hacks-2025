@@ -1,10 +1,10 @@
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from .views import PostingViewSet
 
-
-# Create a router and register our viewset with it.
 router = DefaultRouter()
-router.register(r'postings', PostingViewSet)  # This automatically creates API endpoints
+router.register(r'postings', PostingViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),  # Includes the auto-generated routes
+    path('', include(router.urls)),
 ]

@@ -5,3 +5,4 @@ psycopg2
 djangorestframework-simplejwt
 openai==0.28
 numpy
+scikit-learn

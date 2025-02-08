@@ -30,4 +30,9 @@ def calculate_similarity(list1, list2):
     return average_similarity > 0.8  # Adjust the threshold as needed
 
 # Example usage:
+list1 = ["I love programming.", "Machine learning is fun."]
+list2 = ["Programming is awesome.", "I enjoy learning about machines."]
+result = calculate_similarity(list1, list2)
+
+print("Are the lists similar?", result)
 
