@@ -1,4 +1,6 @@
+from django.http import HttpResponse
 from django.shortcuts import render
+from submissions.serializers import SubmissionSerializer
 from submissions.models import Submission
 from tartan_ads.utilities import calculate_similarity
 from rest_framework import status, viewsets
@@ -38,6 +40,7 @@ class PostingViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'], url_path="get-ads")
     def get_ads(self, request):
         search_term = request.query_params.get('queryset', None)  # Get query string parameter
+        print("+========" + search_term)
         if not search_term:
             return Response({"detail": "queryset parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -87,9 +90,29 @@ class PostingViewSet(viewsets.ModelViewSet):
         if sel_sub is None:
             return Response({"detail": "No matching submission found."}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = self.get_serializer(sel_sub)
+        serializer = SubmissionSerializer(sel_sub)
+        print(serializer.data)
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Test Video</title>
+        </head>
+        <body>
 
-        return Response(serializer.data)
+            <h2>MP4 Video Test</h2>
+
+            <video id="myVideo" width="560" height="315" autoplay muted playsinline controls>
+                <source src="{serializer.data["video"]}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+
+        </body>
+        </html>
+        """
+        return HttpResponse(html_content, content_type="text/html")  
 
     # @action(detail=False, methods=['post'])
     # def get_ads(self, request, pk=None):
