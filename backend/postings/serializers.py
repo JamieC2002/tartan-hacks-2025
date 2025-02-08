@@ -1,9 +1,12 @@
 from rest_framework import serializers
-from .models import Posting
+from postings.models import Posting
+from users.models import User
 
 class PostingSerializer(serializers.ModelSerializer):
-    creator_email = serializers.CharField(source='creator.email', read_only=True)
-    
+    creator = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), write_only=True
+    )
+
     def validate_keywords(self, value):
         """Ensure that keywords is always a list of strings"""
         if not isinstance(value, list):
@@ -16,5 +19,7 @@ class PostingSerializer(serializers.ModelSerializer):
         model = Posting
         fields = '__all__'
 
-        
-        
+class ShowPostingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Posting
+        fields = '__all__'
