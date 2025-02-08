@@ -8,6 +8,8 @@ from users.models import User
 
 
 class UserViewSet(GenericViewSet):
+    queryset = User.objects.all()
+
     @action(detail=False, methods=["POST"], url_path="register")
     def register(self, request, *args, **kwargs):
         serializer = RegisterSerializer(data=request.data)
@@ -26,3 +28,13 @@ class UserViewSet(GenericViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["GET"], url_path="profile")
+    def get_user(self, request, pk=None):
+        """Retrieve a specific user by ID."""
+        try:
+            user = self.get_object()
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)

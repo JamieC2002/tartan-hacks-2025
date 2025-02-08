@@ -11,14 +11,15 @@ import Register from './pages/Register';
 import axios from 'axios';
 
 
-axios.defaults.baseURL = "http://172.26.17.196:12060/api"
+// axios.defaults.baseURL = "http://172.26.17.196:12060/api"
+axios.defaults.baseURL = "http://127.0.0.1:8000/api"
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:id" element={<Profile />} />
         <Route path="/register" element={<Register />} />
       </Routes>
     </Router>

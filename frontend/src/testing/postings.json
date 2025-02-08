@@ -1,0 +1,102 @@
+[
+  {
+    "creator": 1,
+    "title": "Tech Gadget Giveaway",
+    "description": "Promote our latest smartwatch and get rewarded for each click!",
+    "deadline": "2025-03-01T23:59:59Z",
+    "price_per_click": "0.0500",
+    "percentage_cut": "0.15",
+    "is_active": true,
+    "keywords": ["technology", "smartwatch", "giveaway", "promotion"]
+  },
+  {
+    "creator": 2,
+    "title": "Fitness App Promotion",
+    "description": "Help us spread the word about our new fitness app and earn money per click.",
+    "deadline": "2025-02-28T23:59:59Z",
+    "price_per_click": "0.0300",
+    "percentage_cut": "0.10",
+    "is_active": true,
+    "keywords": ["fitness", "app", "health", "promotion"]
+  },
+  {
+    "creator": 3,
+    "title": "Gaming Tournament Ad",
+    "description": "Looking for content creators to advertise our upcoming esports tournament!",
+    "deadline": "2025-03-15T23:59:59Z",
+    "price_per_click": "0.0750",
+    "percentage_cut": "0.20",
+    "is_active": true,
+    "keywords": ["gaming", "esports", "tournament", "competition"]
+  },
+  {
+    "creator": 4,
+    "title": "Eco-Friendly Product Launch",
+    "description": "Promote our sustainable products and earn for every click!",
+    "deadline": "2025-04-10T23:59:59Z",
+    "price_per_click": "0.0450",
+    "percentage_cut": "0.12",
+    "is_active": true,
+    "keywords": ["eco-friendly", "sustainability", "green products", "promotion"]
+  },
+  {
+    "creator": 5,
+    "title": "New AI Tool for Developers",
+    "description": "Drive traffic to our AI-powered coding assistant. Earn per click!",
+    "deadline": "2025-03-20T23:59:59Z",
+    "price_per_click": "0.0600",
+    "percentage_cut": "0.18",
+    "is_active": true,
+    "keywords": ["AI", "developers", "coding", "automation"]
+  },
+  {
+    "creator": 6,
+    "title": "Online Learning Platform Promotion",
+    "description": "Get users to sign up for our online courses and earn per engagement!",
+    "deadline": "2025-05-01T23:59:59Z",
+    "price_per_click": "0.0350",
+    "percentage_cut": "0.10",
+    "is_active": true,
+    "keywords": ["education", "online courses", "learning", "skills"]
+  },
+  {
+    "creator": 7,
+    "title": "Crypto Wallet Referral Campaign",
+    "description": "Spread awareness about our secure crypto wallet and earn per referral click.",
+    "deadline": "2025-03-30T23:59:59Z",
+    "price_per_click": "0.0800",
+    "percentage_cut": "0.25",
+    "is_active": true,
+    "keywords": ["crypto", "blockchain", "wallet", "finance"]
+  },
+  {
+    "creator": 8,
+    "title": "Pet Food Brand Awareness",
+    "description": "Help promote our organic pet food products and earn per click!",
+    "deadline": "2025-04-15T23:59:59Z",
+    "price_per_click": "0.0400",
+    "percentage_cut": "0.15",
+    "is_active": true,
+    "keywords": ["pets", "dogs", "cats", "organic food"]
+  },
+  {
+    "creator": 9,
+    "title": "Fashion Brand Collaboration",
+    "description": "Drive traffic to our latest fashion line and earn commission on sales!",
+    "deadline": "2025-04-05T23:59:59Z",
+    "price_per_click": "0.0550",
+    "percentage_cut": "0.22",
+    "is_active": true,
+    "keywords": ["fashion", "clothing", "trendy", "shopping"]
+  },
+  {
+    "creator": 10,
+    "title": "AI-Powered Resume Builder",
+    "description": "Promote our AI-driven resume-building service and get paid per click!",
+    "deadline": "2025-03-25T23:59:59Z",
+    "price_per_click": "0.0500",
+    "percentage_cut": "0.20",
+    "is_active": true,
+    "keywords": ["resume", "job search", "career", "AI"]
+  }
+]
