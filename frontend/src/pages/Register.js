@@ -25,7 +25,7 @@ const Register = () => {
     <MainLayout>
       <div className="flex h-screen items-center justify-center bg-gray-100">
         <div className="w-full max-w-md space-y-6 rounded-lg bg-white p-8 shadow-md">
-          <h2 className="text-center text-2xl font-semibold text-gray-700">Sign Up</h2>
+          <h2 className="text-center text-2xl font-semibold text-gray-700">Register</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <input

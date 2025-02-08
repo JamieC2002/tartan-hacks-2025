@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import MainLayout from "../components/MainLayout";
+import ImageWithFullscreen from "../components/ImageWithFullscreen";
 
 const Posting = () => {
   const { id } = useParams();
@@ -88,20 +89,13 @@ const Posting = () => {
 
                   {/* Image or Video */}
                   {submission.image ? (
-                    <img
-                      src={submission.image}
-                      alt="Submission"
-                      className="w-full h-48 object-cover rounded-lg mb-2"
-                    />
+                    <ImageWithFullscreen submission={submission} />
                   ) : submission.video ? (
                     <video controls className="w-full h-48 rounded-lg mb-2">
                       <source src={submission.video} type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
                   ) : null}
-
-                  {/* Description */}
-                  <p className="text-gray-600 text-sm mb-2">{submission.description}</p>
 
                   {/* Keywords */}
                   {submission.keywords.length > 0 && (
